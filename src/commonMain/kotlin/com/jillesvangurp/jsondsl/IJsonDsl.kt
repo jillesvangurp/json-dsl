@@ -26,7 +26,7 @@ interface IJsonDsl : MutableMap<String, Any?> {
      * Property delegate that stores the value in the MapBackedProperties. Use this to create type safe
      * properties.
      */
-    fun <T : Any?> property(defaultValue: T?=null): ReadWriteProperty<Any, T>
+    fun <T : Any?> property(): ReadWriteProperty<Any, T>
 
     /**
      * Property delegate that stores the value in the MapBackedProperties; uses the customPropertyName instead of the

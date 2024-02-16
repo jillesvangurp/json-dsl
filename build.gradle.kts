@@ -9,6 +9,11 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven(url = "https://jitpack.io") {
+        content {
+            includeGroup("com.github.jillesvangurp")
+        }
+    }
 }
 
 kotlin {
@@ -51,7 +56,6 @@ kotlin {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
                 implementation("io.kotest:kotest-assertions-core:_")
-
             }
         }
 
@@ -62,6 +66,7 @@ kotlin {
         }
         jvmTest {
             dependencies {
+                implementation("com.github.jillesvangurp:kotlin4example:_")
                 runtimeOnly("org.junit.jupiter:junit-jupiter:_")
                 implementation(kotlin("test-junit"))
             }

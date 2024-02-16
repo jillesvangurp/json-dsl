@@ -49,16 +49,11 @@ open class JsonDsl(
      * Property delegate that stores the value in the MapBackedProperties. Use this to create type safe
      * properties.
      */
-    override fun <T : Any?> property(defaultValue: T?): ReadWriteProperty<Any, T> {
+    override fun <T : Any?> property(): ReadWriteProperty<Any, T> {
         return object : ReadWriteProperty<Any, T> {
             override fun getValue(thisRef: Any, property: KProperty<*>): T {
                 val propertyName = property.name.convertPropertyName(namingConvention)
-                return (_properties[propertyName]).let {
-                    if(it == null && defaultValue != null) {
-                        _properties[propertyName] = defaultValue
-                    }
-                    _properties[propertyName]
-                } as T
+                return (_properties[propertyName]) as T
             }
 
             override fun setValue(thisRef: Any, property: KProperty<*>, value: T) {
@@ -68,16 +63,21 @@ open class JsonDsl(
     }
 
     /**
-     * Property delegate that stores the value in the MapBackedProperties; uses the customPropertyName instead of the
-     * kotlin property name. Use this to create type safe properties in case the property name you need overlaps clashes
+     * Property delegate that stores the value in the MapBackedProperties; uses the [customPropertyName] instead of the
+     * kotlin property name.
+     *
+     * Use can this to, for example, create type safe properties in case the property name you need overlaps clashes
      * with a kotlin keyword or super class property or method. For example, "size" is also a method on
      * MapBackedProperties and thus cannot be used as a kotlin property name in a Kotlin class implementing Map.
+     *
+     * If you specify a [defaultValue], it is added to the map.
      */
     override fun <T : Any?> property(customPropertyName: String, defaultValue: T?): ReadWriteProperty<Any, T> {
+        _properties[customPropertyName] = defaultValue
         return object : ReadWriteProperty<Any, T> {
             override fun getValue(thisRef: Any, property: KProperty<*>): T {
-                return _properties[customPropertyName].let {
-                    if(it == null && defaultValue != null) {
+                return _properties[customPropertyName].let { currentValue ->
+                    if(currentValue == null && defaultValue != null) {
                         _properties[customPropertyName] = defaultValue
                     }
                     _properties[customPropertyName]
