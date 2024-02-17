@@ -206,5 +206,6 @@ val readmeMd = sourceGitRepository.md {
             """.trimIndent()
         }
     }
+    includeMdFile("outro.md")
 }
 
