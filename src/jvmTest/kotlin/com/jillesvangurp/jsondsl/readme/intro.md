@@ -16,13 +16,15 @@ Not only do I have to worry about upstream additions to OpenSearch and Elasticse
 
 ## Strongly typed and Flexible
 
-JsonDsl was created to address this problem. It allows the creation of rich, type safe Kotlin DSLs with all the bells and whistles that Kotlin users are used to. But users can trivially extend any JsonDsl  based Kotlin DSL simply by accessing the underlying `MutableMap<Any,String>`. If a particular property is not implemented, you can simply add it with a `put`. 
+The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you
+to define classes with properties that delegate storing their value to this map. For anything that your
+classes don't implement, the user can always write to the map directly using a simple `put`.
 
-This gives users a nice fallback and relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
+This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
 
 ## Gradle
 
-Add the `maven.tryformation.com` repository:
+This library is published to our own maven repository.
 
 ```kotlin
 repositories {
@@ -35,7 +37,7 @@ repositories {
 }
 ```
 
-And then the dependency to commonsMain or main:
+And then you can add the dependency:
 
 ```kotlin
     // check the latest release tag for the latest version

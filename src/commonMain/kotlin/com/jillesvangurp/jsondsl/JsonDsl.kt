@@ -109,9 +109,10 @@ open class JsonDsl(
 
 }
 
-fun JsonDsl.json(pretty: Boolean=false): String {
-    return SimpleJsonSerializer().serialize(this,pretty)
-}
+fun JsonDsl.json(pretty: Boolean=false) = SimpleJsonSerializer().serialize(this,pretty)
+
+fun JsonDsl.yaml(includeYamlDocumentStart: Boolean = true) = SimpleYamlSerializer(includeYamlDocumentStart)
+    .serialize(this)
 
 fun withJsonDsl(
     namingConvention: PropertyNamingConvention = PropertyNamingConvention.AsIs,
