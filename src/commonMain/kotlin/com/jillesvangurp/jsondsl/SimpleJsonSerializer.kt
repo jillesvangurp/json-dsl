@@ -49,7 +49,6 @@ class SimpleJsonSerializer : JsonDslSerializer {
                     if (iterator.hasNext()) {
                         buf.append(',')
                     }
-
                 }
                 buf.newLine(indent, indentStep, pretty)
                 buf.append("}")
@@ -133,8 +132,8 @@ class SimpleJsonSerializer : JsonDslSerializer {
 
                 else -> {
                     when {
-                        c < ' ' -> {
-                            val code = "000${c.code.toString(16)}"
+                        c.isControl() -> {
+                            val code = c.code.toString(16).padStart(4, '0')
                             buf.append("\\u${code.substring(code.length - 4)}")
                         }
 
@@ -146,6 +145,7 @@ class SimpleJsonSerializer : JsonDslSerializer {
             }
         }
     }
+    private fun Char.isControl(): Boolean = this in '\u0000'..'\u001F' || this in '\u007F'..'\u009F'
 
     private fun StringBuilder.newLine(indent: Int, indentStep: Int, pretty: Boolean) {
         if (pretty) {
