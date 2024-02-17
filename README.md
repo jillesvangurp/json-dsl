@@ -1,5 +1,7 @@
 # JsonDsl
 
+[![Process Pull Request](https://github.com/jillesvangurp/json-dsl/actions/workflows/pr_master.yaml/badge.svg)](https://github.com/jillesvangurp/json-dsl/actions/workflows/pr_master.yaml)
+
 JsonDsl is a multi platform kotlin library to allow people to create Kotlin DSLs that serialize to JSON.
 
 A DSL (Domain Specific Language) differs from General Purpose Languages, such as Kotlin, in that a DSL is intended to program or drive a tool or framework for some domain or API. Kotlin like several other languages is suitable for creating internal DSLs that (ab)use the syntax of the host language to implement a DSL.
@@ -19,6 +21,28 @@ Not only do I have to worry about upstream additions to OpenSearch and Elasticse
 JsonDsl was created to address this problem. It allows the creation of rich, type safe Kotlin DSLs with all the bells and whistles that Kotlin users are used to. But users can trivially extend any JsonDsl  based Kotlin DSL simply by accessing the underlying `MutableMap<Any,String>`. If a particular property is not implemented, you can simply add it with a `put`. 
 
 This gives users a nice fallback and relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
+
+## Gradle
+
+Add the `maven.tryformation.com` repository:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://maven.tryformation.com/releases") {
+        content {
+            includeGroup("com.jillesvangurp")
+        }
+    }
+}
+```
+
+And then the dependency to commonsMain or main:
+
+```kotlin
+    // check the latest release tag for the latest version
+    implementation("com.jillesvangurp:json-dsl:1.x.y")
+```
 
 ## Examples
 
