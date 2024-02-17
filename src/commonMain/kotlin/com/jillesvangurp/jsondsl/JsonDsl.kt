@@ -73,7 +73,9 @@ open class JsonDsl(
      * If you specify a [defaultValue], it is added to the map.
      */
     override fun <T : Any?> property(customPropertyName: String, defaultValue: T?): ReadWriteProperty<Any, T> {
-        _properties[customPropertyName] = defaultValue
+        if(defaultValue!= null) {
+            _properties[customPropertyName] = defaultValue
+        }
         return object : ReadWriteProperty<Any, T> {
             override fun getValue(thisRef: Any, property: KProperty<*>): T {
                 return _properties[customPropertyName].let { currentValue ->
