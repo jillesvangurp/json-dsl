@@ -84,4 +84,12 @@ class JsonDslTest {
             this["bar"] = 42
         }.json(true) shouldNotContain "foo"
     }
+
+    @Test
+    fun termQueryShouldIndentCorrectly() {
+        val q = query {
+            query = term("foo","bar")
+        }
+        println(q.json(true))
+    }
 }

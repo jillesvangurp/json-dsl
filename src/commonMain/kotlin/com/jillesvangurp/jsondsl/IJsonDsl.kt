@@ -44,10 +44,12 @@ interface IJsonDsl : MutableMap<String, Any?> {
 
 /**
  * Helper function to construct a MapBackedProperties with some content.
+ *
+ * Passes on the defaultNamingConvention to withJsonDsl.
  */
-fun IJsonDsl.dslObject(namingConvention: PropertyNamingConvention = defaultNamingConvention, block: JsonDsl.() -> Unit): JsonDsl {
-    val jsonDsl = JsonDsl(namingConvention = namingConvention)
-    block.invoke(jsonDsl)
-    return jsonDsl
-}
+fun IJsonDsl.dslObject(
+    namingConvention: PropertyNamingConvention = defaultNamingConvention,
+    block: JsonDsl.() -> Unit
+)=  withJsonDsl(namingConvention=namingConvention, block)
+
 

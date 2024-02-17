@@ -98,26 +98,26 @@ This does the right things to all the Kotlin types, including `Any`:
   "bool_val": true,
   "double_val": 3.141592653589793,
   "array_val": [
-  "hello", 
-  "world"
+    "hello", 
+    "world"
   ],
   "list_val": [
-  "1", 
-  "2"
+    "1", 
+    "2"
   ],
   "map_val": {
-  "Key": "Value"
+    "Key": "Value"
   },
   "idontknow": [
-  [
-    1, 
-    2, 
-    "3", 
-    4.0, 
-    {
-    "this": "is valid JSON"
-    }
-  ]
+    [
+      1, 
+      2, 
+      "3", 
+      4.0, 
+      {
+        "this": "is valid JSON"
+      }
+    ]
   ]
 }
 ```
@@ -158,14 +158,14 @@ MyDsl().apply {
   "foo": "bar",
   "bar": "foo",
   "going_off_script": [
-  {
-    "anything": "is possible"
-  }, 
-  42
+    {
+      "anything": "is possible"
+    }, 
+    42
   ],
   "inline_json": {
-  "if":"you need to",
-  "you":"can even add json in string form"
+    "if":"you need to",
+    "you":"can even add json in string form"
 }
 }
 ```
@@ -199,9 +199,9 @@ MyDsl().apply {
 
 ```json
 {
-  "size": 2147483647,
   "meaning_of_life": 42,
-  "camel_case": true
+  "camel_case": true,
+  "size": 2147483647
 }
 ```
 
@@ -218,39 +218,96 @@ However, JsonDsl provides you all you need to wrap this with
 a nice type safe Kotlin DSL.            
 
 ```kotlin
-    +"""
-      And this is how you would use it.
-    """.trimIndent()
-    example {
-      class MyModelClassInES(val myField: String)
-      query {
-        query = term(MyModelClassInES::myField, "some value")
-      }
-    }.result.getOrThrow()!!.let { q ->
-      +"""
-        In JSON form this looks as follows:        
-      """.trimIndent()
-      mdCodeBlock(q.toString(),"json")
-      +"""
-        Note how it correctly wrapped the term query with an object. And how it correctly 
-        assigns the `TermConfiguration` in an object that has the field value as the key.
-        
-        Also note how we use a property reference here to avoid having to use 
-        a string literal. The Elasticsearch Query DSL support in [kt-search]() is a great 
-        reference for how to use JsonDsl.
-      """.trimIndent()
+@DslMarker
+annotation class SearchDSLMarker
+
+interface QueryClauses
+
+// abbreviated version of the
+// Elasticsearch Query DSL in kt-search
+class QueryDsl:
+  JsonDsl(namingConvention = PropertyNamingConvention.ConvertToSnakeCase),
+  QueryClauses
+{
+  // Elasticsearch has this object wrapped in
+  // another object
+  var query: ESQuery
+    get() {
+      val map =
+        this["query"] as Map<String, JsonDsl>
+      val (name, details) = map.entries.first()
+      // reconstruct the ESQuery
+      return ESQuery(name, details)
     }
+    set(value) {
+      this["query"] = value.wrapWithName()
+    }}
+
+fun query(block: QueryDsl.()->Unit): QueryDsl {
+  return QueryDsl().apply(block)
+}
+
+@SearchDSLMarker
+open class ESQuery(
+  val name: String,
+  val queryDetails: JsonDsl = JsonDsl()
+)  {
+
+  // Elasticsearch wraps everything in an outer object
+  // with the name as its only key
+  fun wrapWithName() = withJsonDsl() {
+    this[name] = queryDetails
   }
 }
+
+// the dsl class for creating term queries
+@SearchDSLMarker
+class TermQuery(
+  field: String,
+  value: String,
+  termQueryConfig: TermQueryConfig = TermQueryConfig(),
+  block: (TermQueryConfig.() -> Unit)? = null
+) : ESQuery("term") {
+
+  init {
+    queryDetails.put(field, termQueryConfig, PropertyNamingConvention.AsIs)
+    termQueryConfig.value = value
+    block?.invoke(termQueryConfig)
+  }
+}
+
+// configuration for term queries
+class TermQueryConfig : JsonDsl() {
+  var value by property<String>()
+  var boost by property<Double>()
+}
+
+// making this an extension function ensures it is available
+// on the receiver of the query {..} block
+fun QueryClauses.term(
+  field: String,
+  value: String,
+  block: (TermQueryConfig.() -> Unit)? = null
+) =
+  TermQuery(field, value, block = block)
+
+fun QueryClauses.term(
+  field: KProperty<*>,
+  value: String,
+  block: (TermQueryConfig.() -> Unit)? = null
+) =
+  TermQuery(field.name, value, block = block)
 ```
 
 And this is how you would use it.
 
 ```kotlin
 class MyModelClassInES(val myField: String)
-query {
+val q = query {
   query = term(MyModelClassInES::myField, "some value")
 }
+val pretty = q.json(pretty = true)
+println(pretty)
 ```
 
 In JSON form this looks as follows:                
@@ -258,11 +315,11 @@ In JSON form this looks as follows:
 ```json
 {
   "query": {
-  "term": {
-    "myField": {
-    "value": "some value"
+    "term": {
+      "myField": {
+        "value": "some value"
+      }
     }
-  }
   }
 }
 ```

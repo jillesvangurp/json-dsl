@@ -11,7 +11,7 @@ const val githubLink = "https://github.com/formation-res/pg-docstore"
 
 val sourceGitRepository = SourceRepository(
     repoUrl = githubLink,
-    sourcePaths = setOf("src/commonMain/kotlin", "src/jvmTest/kotlin")
+    sourcePaths = setOf("src/commonMain/kotlin", "src/commonTest/kotlin","src/jvmTest/kotlin")
 )
 
 class ReadmeGenerationTest {
@@ -180,20 +180,22 @@ val readmeMd = sourceGitRepository.md {
             However, JsonDsl provides you all you need to wrap this with 
             a nice type safe Kotlin DSL.            
         """.trimIndent()
-        exampleFromSnippet(ReadmeGenerationTest::class, "kt-search based example", allowLongLines = true)
+        exampleFromSnippet("com/jillesvangurp/jsondsl/termquery.kt", "kt-search-based-example", allowLongLines = true)
         +"""
             And this is how you would use it.
         """.trimIndent()
         example {
             class MyModelClassInES(val myField: String)
-            query {
+            val q = query {
                 query = term(MyModelClassInES::myField, "some value")
             }
-        }.result.getOrThrow()!!.let { q ->
+            val pretty = q.json(pretty = true)
+            println(pretty)
+        }.let {
             +"""
                 In JSON form this looks as follows:                
             """.trimIndent()
-            mdCodeBlock(q.toString(),"json")
+            mdCodeBlock(it.stdOut,"json")
             +"""
                 Note how it correctly wrapped the term query with an object. And how it correctly 
                 assigns the `TermConfiguration` in an object that has the field value as the key.
@@ -206,86 +208,3 @@ val readmeMd = sourceGitRepository.md {
     }
 }
 
-// BEGIN kt-search based example
-@DslMarker
-annotation class SearchDSLMarker
-
-interface QueryClauses
-
-// common parent for all query variants
-@SearchDSLMarker
-open class ESQuery(
-    val name: String,
-    val queryDetails: JsonDsl = JsonDsl()
-) : IJsonDsl by queryDetails {
-
-    // Elasticsearch wraps everything in an outer object
-    // with the name as its only key
-    fun wrapWithName(): Map<String, Any?> = dslObject { this[name] = queryDetails }
-
-    override fun toString(): String {
-        return wrapWithName().toString()
-    }
-}
-
-// configuration for term queries
-class TermQueryConfig : JsonDsl() {
-    var value by property<String>()
-    var boost by property<Double>()
-}
-
-// the dsl class for creating term queries
-@SearchDSLMarker
-class TermQuery(
-    field: String,
-    value: String,
-    termQueryConfig: TermQueryConfig = TermQueryConfig(),
-    block: (TermQueryConfig.() -> Unit)? = null
-) : ESQuery("term") {
-
-    init {
-        put(field, termQueryConfig, PropertyNamingConvention.AsIs)
-        termQueryConfig.value = value
-        block?.invoke(termQueryConfig)
-    }
-}
-
-fun QueryClauses.term(
-    field: KProperty<*>,
-    value: String,
-    block: (TermQueryConfig.() -> Unit)? = null
-) =
-    TermQuery(field.name, value, block = block)
-
-fun QueryClauses.term(
-    field: String,
-    value: String,
-    block: (TermQueryConfig.() -> Unit)? = null
-) =
-    TermQuery(field, value, block = block)
-
-// abbreviated version of the
-// Elasticsearch Query DSL in kt-search
-@Suppress("UNCHECKED_CAST")
-class QueryDsl:
-    JsonDsl(namingConvention =
-      PropertyNamingConvention.ConvertToSnakeCase),
-    QueryClauses
-{
-    // Elasticsearch has this object in
-    // an object kind of thing that we need to emulate.
-    var query: ESQuery
-        get() {
-            val map =
-                this["query"] as Map<String, JsonDsl>
-            val (name, details) = map.entries.first()
-            return ESQuery(name, details)
-        }
-        set(value) {
-            this["query"] = value.wrapWithName()
-        }}
-
-fun query(block: QueryDsl.()->Unit): QueryDsl {
-    return QueryDsl().apply(block)
-}
-// END kt-search based example

@@ -113,7 +113,10 @@ fun JsonDsl.json(pretty: Boolean=false): String {
     return SimpleJsonSerializer().serialize(this,pretty)
 }
 
-fun withJsonDsl(namingConvention: PropertyNamingConvention = PropertyNamingConvention.AsIs, block: JsonDsl.() -> Unit) = JsonDsl(namingConvention=namingConvention).apply {
+fun withJsonDsl(
+    namingConvention: PropertyNamingConvention = PropertyNamingConvention.AsIs,
+    block: JsonDsl.() -> Unit
+) = JsonDsl(namingConvention=namingConvention).apply {
     block.invoke(this)
 }
 
