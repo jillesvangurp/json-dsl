@@ -54,36 +54,17 @@ class SimpleJsonSerializer : JsonDslSerializer {
                 buf.append("}")
             }
 
-            is Iterable<*> -> {
-                buf.append('[')
-                val iterator = obj.iterator()
-                while (iterator.hasNext()) {
-                    val v = iterator.next()
-                    buf.newLine(indent + 1, indentStep, pretty)
-                    write(buf = buf, indent = indent + 1, indentStep = indentStep, pretty = pretty, obj = v)
-                    if (iterator.hasNext()) {
-                        buf.append(',')
-                        buf.space(pretty)
-                    }
-                }
-                buf.newLine(indent, indentStep, pretty)
-                buf.append(']')
+            is Iterator<*> -> {
+                writeIterator(buf, obj, indent, indentStep, pretty)
             }
-
+            is Iterable<*> -> {
+                writeIterator(buf, obj.iterator(), indent, indentStep, pretty)
+            }
+            is Sequence<*> -> {
+                writeIterator(buf, obj.iterator(), indent, indentStep, pretty)
+            }
             is Array<*> -> {
-                buf.append('[')
-                val iterator = obj.iterator()
-                while (iterator.hasNext()) {
-                    val v = iterator.next()
-                    buf.newLine(indent + 1, indentStep, pretty)
-                    write(buf = buf, indent = indent + 1, indentStep = indentStep, pretty = pretty, obj = v)
-                    if (iterator.hasNext()) {
-                        buf.append(',')
-                        buf.space(pretty)
-                    }
-                }
-                buf.newLine(indent, indentStep, pretty)
-                buf.append(']')
+                writeIterator(buf, obj.iterator(), indent, indentStep, pretty)
             }
 
             is CustomValue<*> -> write(buf, indent, indentStep, pretty, obj.value)
@@ -95,6 +76,28 @@ class SimpleJsonSerializer : JsonDslSerializer {
                 buf.append('"')
             }
         }
+    }
+
+    private fun writeIterator(
+        buf: StringBuilder,
+        iterator: Iterator<*>,
+        indent: Int,
+        indentStep: Int,
+        pretty: Boolean
+    ) {
+        buf.append('[')
+
+        while (iterator.hasNext()) {
+            val v = iterator.next()
+            buf.newLine(indent + 1, indentStep, pretty)
+            write(buf = buf, indent = indent + 1, indentStep = indentStep, pretty = pretty, obj = v)
+            if (iterator.hasNext()) {
+                buf.append(',')
+                buf.space(pretty)
+            }
+        }
+        buf.newLine(indent, indentStep, pretty)
+        buf.append(']')
     }
 
     private fun String.escapeJson(buf: StringBuilder) {

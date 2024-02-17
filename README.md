@@ -18,13 +18,15 @@ Not only do I have to worry about upstream additions to OpenSearch and Elasticse
 
 ## Strongly typed and Flexible
 
-JsonDsl was created to address this problem. It allows the creation of rich, type safe Kotlin DSLs with all the bells and whistles that Kotlin users are used to. But users can trivially extend any JsonDsl  based Kotlin DSL simply by accessing the underlying `MutableMap<Any,String>`. If a particular property is not implemented, you can simply add it with a `put`. 
+The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you
+to define classes with properties that delegate storing their value to this map. For anything that your
+classes don't implement, the user can always write to the map directly using a simple `put`.
 
-This gives users a nice fallback and relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
+This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
 
 ## Gradle
 
-Add the `maven.tryformation.com` repository:
+This library is published to our own maven repository.
 
 ```kotlin
 repositories {
@@ -37,7 +39,7 @@ repositories {
 }
 ```
 
-And then the dependency to commonsMain or main:
+And then you can add the dependency:
 
 ```kotlin
     // check the latest release tag for the latest version
@@ -78,9 +80,13 @@ pretty printed json:
 
 JSON is a fairly simple data format. There are numbers, booleans, strings, lists and dictionaries.
 
-Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.
+Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.                
 
-JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.              
+JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.   
+           
+So it understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
+And of course other JsonDsl classes, so you can nest them.                
+And when it falls back to using `toString()`                
 
 ```kotlin
 class MyDsl : JsonDsl() {
@@ -105,11 +111,12 @@ MyDsl().apply {
   )
 
   // The Any type is a bit of free for all
-  idontknow = setOf(
-    arrayOf(
+  idontknow = mapOf(
+    "arrays" to arrayOf(
       1, 2, "3", 4.0,
       mapOf("this" to "is valid JSON")
-    )
+    ),
+    "sequences" to sequenceOf(1,"2",3.0)
   )
 }
 ```
@@ -132,8 +139,8 @@ This does the right things to all the Kotlin types, including `Any`:
   "map_val": {
     "Key": "Value"
   },
-  "idontknow": [
-    [
+  "idontknow": {
+    "arrays": [
       1, 
       2, 
       "3", 
@@ -141,8 +148,13 @@ This does the right things to all the Kotlin types, including `Any`:
       {
         "this": "is valid JSON"
       }
+    ],
+    "sequences": [
+      1, 
+      "2", 
+      3.0
     ]
-  ]
+  }
 }
 ```
 
@@ -227,6 +239,101 @@ MyDsl().apply {
   "camel_case": true,
   "size": 2147483647
 }
+```
+
+### Custom values
+
+Sometimes you need to have the serialized version of a value be different
+from the kotlin identifier. For this we have added the CustomValue interface.
+
+This is useful in combination with for example Enums.
+
+```kotlin
+enum class Grades(override val value: Double) : CustomValue<Double> {
+  Excellent(7.0),
+  Pass(5.51),
+  Fail(3.0),
+  ;
+}
+```
+
+```kotlin
+println(withJsonDsl {
+  this["grade"] = Grades.Excellent
+}.json(true))
+```
+
+Note how the grade's value is used instead of the name
+
+```json
+{
+  "grade": 7.0
+}
+```
+
+You can also rely on the `toString()` function:
+
+```kotlin
+data class FooBar(val foo:String="foo", val bar: String="bar")
+println(withJsonDsl {
+  this["foo"]=FooBar()
+})
+```
+
+Note how it simply uses toString on the data class
+
+```json
+{
+  "foo": "FooBar(foo=foo, bar=bar)"
+}
+```
+
+## YAML
+
+While initially written to support JSON, there is also a yaml serializer that you may use to 
+create Kotlin DSLs for YAML based DSLs. 
+
+```kotlin
+class YamlDSL : JsonDsl() {
+  var str by property<String>()
+  var map by property<Map<String,Any>>()
+  var list by property<List<Any>>()
+}
+val dsl = YamlDSL().apply {
+  str="""
+    Multi line
+    Strings are 
+        supported
+      and
+    preserve their
+      indentation!
+  """.trimIndent()
+  map = mapOf(
+    "foo" to "bar",
+    "num" to PI,
+    "bool" to true,
+    "notABool" to "false"
+  )
+}
+// default is true for including ---
+print(dsl.yaml(includeYamlDocumentStart = false))
+```
+
+This prints the YAML below:
+
+```yaml
+str: |
+  Multi line
+  Strings are 
+          supported
+      and
+  preserve their
+      indentation!
+map: 
+  foo: bar
+  num: 3.141592653589793
+  bool: true
+  notABool: "false"
 ```
 
 ## A real life, complex example

@@ -34,13 +34,21 @@ class SimpleYamlSerializer(val includeYamlDocumentStart: Boolean=true) {
                 if (!isRoot) buf.append("\n")
                 writeMap(buf, indent, obj)
             }
+            is Sequence<*> -> {
+                if (!isRoot) buf.append("\n")
+                writeIterator(buf, indent, obj.iterator())
+            }
+            is Iterator<*> -> {
+                if (!isRoot) buf.append("\n")
+                writeIterator(buf, indent, obj)
+            }
             is Iterable<*> -> {
                 if (!isRoot) buf.append("\n")
-                writeIterable(buf, indent, obj)
+                writeIterator(buf, indent, obj.iterator())
             }
             is Array<*> -> {
                 if (!isRoot) buf.append("\n")
-                writeIterable(buf, indent, obj.toList())
+                writeIterator(buf, indent, obj.iterator())
             }
             else -> buf.append("${obj.toString().yamlEscape()}\n")
         }
@@ -67,7 +75,7 @@ class SimpleYamlSerializer(val includeYamlDocumentStart: Boolean=true) {
         }
     }
 
-    private fun writeIterable(buf: StringBuilder, indent: Int, iterable: Iterable<*>) {
+    private fun writeIterator(buf: StringBuilder, indent: Int, iterable: Iterator<*>) {
         iterable.forEach { element ->
             buf.append(" ".repeat(indent))
             buf.append("-")

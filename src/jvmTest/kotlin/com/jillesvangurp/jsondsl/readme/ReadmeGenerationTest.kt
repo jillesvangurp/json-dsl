@@ -14,6 +14,15 @@ val sourceGitRepository = SourceRepository(
     sourcePaths = setOf("src/commonMain/kotlin", "src/commonTest/kotlin","src/jvmTest/kotlin")
 )
 
+// grades-enum
+enum class Grades(override val value: Double) : CustomValue<Double> {
+    Excellent(7.0),
+    Pass(5.51),
+    Fail(3.0),
+    ;
+}
+// grades-enum
+
 class ReadmeGenerationTest {
 
     @Test
@@ -61,9 +70,13 @@ val readmeMd = sourceGitRepository.md {
             +"""
                 JSON is a fairly simple data format. There are numbers, booleans, strings, lists and dictionaries.
                 
-                Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.
+                Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.                
                 
-                JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.              
+                JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.   
+                           
+                So it understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
+                And of course other JsonDsl classes, so you can nest them.                
+                And when it falls back to using `toString()`                
             """.trimIndent()
 
             example {
@@ -89,11 +102,12 @@ val readmeMd = sourceGitRepository.md {
                     )
 
                     // The Any type is a bit of free for all
-                    idontknow = setOf(
-                        arrayOf(
+                    idontknow = mapOf(
+                        "arrays" to arrayOf(
                             1, 2, "3", 4.0,
                             mapOf("this" to "is valid JSON")
-                        )
+                        ),
+                        "sequences" to sequenceOf(1,"2",3.0)
                     )
                 }
             }.result.getOrThrow()!!.let {
@@ -167,6 +181,80 @@ val readmeMd = sourceGitRepository.md {
                 mdCodeBlock(it.json(true), type = "json")
             }
         }
+        subSection("Custom values") {
+            +"""
+                Sometimes you need to have the serialized version of a value be different
+                from the kotlin identifier. For this we have added the CustomValue interface.
+                
+                This is useful in combination with for example Enums.
+                                
+            """.trimIndent()
+
+            exampleFromSnippet(ReadmeGenerationTest::class,"grades-enum")
+            example {
+                println(withJsonDsl {
+                    this["grade"] = Grades.Excellent
+                }.json(true))
+            }.let {
+                +"""
+                    Note how the grade's value is used instead of the name
+                """.trimIndent()
+                mdCodeBlock(it.stdOut,"json")
+            }
+
+            +"""
+                You can also rely on the `toString()` function:
+            """.trimIndent()
+            example {
+                data class FooBar(val foo:String="foo", val bar: String="bar")
+                println(withJsonDsl {
+                    this["foo"]=FooBar()
+                })
+            }.let {
+                +"""
+                    Note how it simply uses toString on the data class
+                """.trimIndent()
+                mdCodeBlock(it.stdOut,"json")
+            }
+        }
+    }
+    section("YAML") {
+            +"""
+                While initially written to support JSON, there is also a yaml serializer that you may use to 
+                create Kotlin DSLs for YAML based DSLs. 
+            """.trimIndent()
+
+            example {
+                class YamlDSL : JsonDsl() {
+                    var str by property<String>()
+                    var map by property<Map<String,Any>>()
+                    var list by property<List<Any>>()
+                }
+                val dsl = YamlDSL().apply {
+                    str="""
+                        Multi line
+                        Strings are 
+                                supported
+                            and
+                        preserve their
+                            indentation!
+                    """.trimIndent()
+                    map = mapOf(
+                        "foo" to "bar",
+                        "num" to PI,
+                        "bool" to true,
+                        "notABool" to "false"
+                    )
+                }
+                // default is true for including ---
+                print(dsl.yaml(includeYamlDocumentStart = false))
+            }.let {
+                +"""
+                    This prints the YAML below:
+                """.trimIndent()
+                mdCodeBlock(it.stdOut,"yaml")
+            }
+
     }
     section("A real life, complex example") {
         +"""
