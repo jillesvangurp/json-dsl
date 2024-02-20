@@ -234,10 +234,10 @@ val readmeMd = sourceGitRepository.md {
                     str="""
                         Multi line
                         Strings are 
-                                supported
-                            and
+                           supported
+                             and
                         preserve their
-                            indentation!
+                          indentation!
                     """.trimIndent()
                     map = mapOf(
                         "foo" to "bar",
@@ -252,7 +252,8 @@ val readmeMd = sourceGitRepository.md {
                 +"""
                     This prints the YAML below:
                 """.trimIndent()
-                mdCodeBlock(it.stdOut,"yaml")
+
+                mdCodeBlock(it.stdOut,"yaml", reIndent = false)
             }
 
     }

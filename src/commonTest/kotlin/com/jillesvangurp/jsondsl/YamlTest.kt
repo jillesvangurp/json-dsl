@@ -5,11 +5,12 @@ import kotlin.test.Test
 
 class YamlTest {
     val serializer = SimpleYamlSerializer()
+
     @Test
     fun shouldProduceYaml() {
         val q = query {
-            query = term("foo","bar") {
-                boost=2.0
+            query = term("foo", "bar") {
+                boost = 2.0
             }
         }
         val yaml = serializer.serialize(q)
@@ -111,8 +112,34 @@ class YamlTest {
         // for now, I've passed this through yamllint.com and it seems OK
         println(yaml)
     }
-}
 
+    @Test
+    fun shouldNotAddSpaces() {
+
+        val yml = withJsonDsl {
+            val str = """
+              Multi line
+              Strings are 
+                 supported
+              and
+                preserve their
+                indentation!
+            """.trimIndent()
+            this["s"] = str
+            this["a"] = """
+                noIndent
+                  twoIndent
+                    fourIndent
+            """.trimIndent()
+        }.yaml()
+        println(yml)
+        yml.lines().let { lines ->
+            val indent = lines.first { it.contains("noIndent") }.indexOf("noIndent")
+            (lines.first { it.contains("twoIndent") }.indexOf("twoIndent") - indent) shouldBe 2
+            (lines.first { it.contains("fourIndent") }.indexOf("fourIndent") - indent) shouldBe 4
+        }
+    }
+}
 
 
 val loremIpsumText = """

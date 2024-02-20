@@ -304,8 +304,8 @@ val dsl = YamlDSL().apply {
   str="""
     Multi line
     Strings are 
-        supported
-      and
+       supported
+       and
     preserve their
       indentation!
   """.trimIndent()
@@ -326,10 +326,10 @@ This prints the YAML below:
 str: |
   Multi line
   Strings are 
-          supported
-      and
+     supported
+       and
   preserve their
-      indentation!
+    indentation!
 map: 
   foo: bar
   num: 3.141592653589793
