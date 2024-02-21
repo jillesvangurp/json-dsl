@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
-//    id("com.android.library") version "8.2.2"
     `maven-publish`
 }
 
@@ -19,7 +18,7 @@ repositories {
 
 kotlin {
     jvm {
-
+        // should work for android as well
     }
     js(IR) {
         nodejs {
@@ -36,9 +35,6 @@ kotlin {
     mingwX64()
     macosX64()
     macosArm64()
-//    androidTarget {
-//        publishLibraryVariants("release", "debug")
-//    }
     iosArm64()
     iosX64()
     // blocked on kotest assertions wasm release
@@ -112,19 +108,6 @@ publishing {
         }
     }
 }
-
-//android {
-//    namespace = "com.jillesvangurp.json-dsl"
-//    compileSdk = 31
-//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-//    defaultConfig {
-//        minSdk = 24
-//        targetSdk = 31
-//    }
-//    testOptions {
-//        unitTests.isReturnDefaultValues = true
-//    }
-//}
 
 
 
