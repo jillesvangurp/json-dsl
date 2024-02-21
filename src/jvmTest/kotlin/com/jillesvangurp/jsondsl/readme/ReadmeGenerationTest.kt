@@ -47,6 +47,7 @@ val readmeMd = sourceGitRepository.md {
                     var message by property<String>()
                 }
 
+                // a helper function to create MyDsl instances
                 fun myDsl(block: MyDsl.() -> Unit): MyDsl {
                     return MyDsl().apply(block)
                 }
@@ -212,15 +213,18 @@ val readmeMd = sourceGitRepository.md {
                 })
             }.let {
                 +"""
-                    Note how it simply uses toString on the data class
+                    Note how it simply uses `toString()` on the data class
                 """.trimIndent()
                 mdCodeBlock(it.stdOut,"json")
+                +"""
+                    This also works for things like enums, value classes, and other Kotlin language constructs.
+                """.trimIndent()
             }
         }
     }
     section("YAML") {
             +"""
-                While initially written to support JSON, there is also a yaml serializer that you may use to 
+                While initially written to support JSON, I also added a YAML serializer that you may use to 
                 create Kotlin DSLs for YAML based DSLs. 
             """.trimIndent()
 
@@ -255,6 +259,10 @@ val readmeMd = sourceGitRepository.md {
 
                 mdCodeBlock(it.stdOut,"yaml", reIndent = false)
             }
+            +"""
+                There are other tree like formats that might be supported in the future like TOML, properties, 
+                and other formats. I welcome pull requests for this provided they don't add any library dependencies.
+            """.trimIndent()
 
     }
     section("A real life, complex example") {

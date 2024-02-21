@@ -9,13 +9,13 @@ A DSL (Domain Specific Language) differs from General Purpose Languages, such as
 
 ## The problem
 
-Of course creating model classes for your json domain model and annotating them with annotations for e.g. kotlinx.serialization is a valid way to start creating a DSL for your JSON dialect of choice.
+Of course creating model classes for your json domain model and annotating them with annotations for e.g. `kotlinx.serialization` is a valid way to start creating a DSL for your JSON or YAML dialect of choice.
 
-However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL.
+However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL. 
 
 This library started out as few classes in my [kt-search](https://github.com/jillesvangurp/kt-search) project, which implements an Elasticsearch and Opensearch client. Elasticsearch has several JSON dialects that are used for querying, defining mappings, and a few other things. Especially the query language has a large number of features and is constantly evolving. 
 
-Not only do I have to worry about upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is of course very challenging.
+Not only do I have to worry about implementing each and every little feature these DSLs have and keeping up with upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is of course very challenging. And it was the main reason I created json-dsl: so I don't have to keep up.
 
 ## Strongly typed and Flexible
 
@@ -25,6 +25,8 @@ classes don't implement, the user can always write to the map directly using a s
 
 This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
 
+With kt-search, I focus on supporting all the commonly used, and some less commonly used things in the Elastic DSLs. But for everything else, I just rely on letting the user modify the underlying map themselves. 
+
 ## Gradle
 
 This library is published to our own maven repository.
@@ -33,8 +35,10 @@ This library is published to our own maven repository.
 repositories {
     mavenCentral()
     maven("https://maven.tryformation.com/releases") {
+        // optional but it speeds up the gradle dependency resolution
         content {
             includeGroup("com.jillesvangurp")
+            includeGroup("com.tryformation")
         }
     }
 }
@@ -57,6 +61,7 @@ class MyDsl : JsonDsl() {
   var message by property<String>()
 }
 
+// a helper function to create MyDsl instances
 fun myDsl(block: MyDsl.() -> Unit): MyDsl {
   return MyDsl().apply(block)
 }
@@ -281,7 +286,7 @@ println(withJsonDsl {
 })
 ```
 
-Note how it simply uses toString on the data class
+Note how it simply uses `toString()` on the data class
 
 ```json
 {
@@ -289,9 +294,11 @@ Note how it simply uses toString on the data class
 }
 ```
 
+This also works for things like enums, value classes, and other Kotlin language constructs.
+
 ## YAML
 
-While initially written to support JSON, there is also a yaml serializer that you may use to 
+While initially written to support JSON, I also added a YAML serializer that you may use to 
 create Kotlin DSLs for YAML based DSLs. 
 
 ```kotlin
@@ -336,6 +343,9 @@ map:
   bool: true
   notABool: "false"
 ```
+
+There are other tree like formats that might be supported in the future like TOML, properties, 
+and other formats. I welcome pull requests for this provided they don't add any library dependencies.
 
 ## A real life, complex example
 
