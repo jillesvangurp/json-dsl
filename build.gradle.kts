@@ -22,12 +22,12 @@ kotlin {
     }
     js(IR) {
         nodejs {
-            testTask(Action {
+            testTask {
                 useMocha {
                     // javascript is a lot slower than Java, we hit the default timeout of 2000
                     timeout = "60s"
                 }
-            })
+            }
         }
     }
     linuxX64()
@@ -35,12 +35,14 @@ kotlin {
     mingwX64()
     macosX64()
     macosArm64()
+    // requires some undocumented cruft to setup android, PRs welcome for this
 //    androidTarget {
 //        publishLibraryVariants("release", "debug")
 //    }
     iosArm64()
     iosX64()
-    // no kotlinx serialization for wasm yet
+    // blocked on kotest assertions wasm release
+//    @OptIn(ExperimentalWasmDsl::class)
 //    wasmJs()
 
     sourceSets {
@@ -110,3 +112,5 @@ publishing {
         }
     }
 }
+
+
