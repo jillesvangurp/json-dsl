@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+//    id("com.android.library") version "8.2.2"
     `maven-publish`
 }
 
@@ -35,7 +36,6 @@ kotlin {
     mingwX64()
     macosX64()
     macosArm64()
-    // requires some undocumented cruft to setup android, PRs welcome for this
 //    androidTarget {
 //        publishLibraryVariants("release", "debug")
 //    }
@@ -112,5 +112,19 @@ publishing {
         }
     }
 }
+
+//android {
+//    namespace = "com.jillesvangurp.json-dsl"
+//    compileSdk = 31
+//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+//    defaultConfig {
+//        minSdk = 24
+//        targetSdk = 31
+//    }
+//    testOptions {
+//        unitTests.isReturnDefaultValues = true
+//    }
+//}
+
 
 

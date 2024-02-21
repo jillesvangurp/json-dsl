@@ -2,8 +2,9 @@ rootProject.name = "json-dsl"
 
 pluginManagement {
     repositories {
+        google()
         gradlePluginPortal()
-    }
+        mavenCentral()    }
 }
 
 plugins {
