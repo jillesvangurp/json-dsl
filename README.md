@@ -54,7 +54,7 @@ And then you can add the dependency:
 
 All the examples in this README are implemented using
     my [kotlin4example](https://github.com/jillesvangurp/kotlin4example) library. You can find 
-    the source code that generates this README [here](https://github.com/formation-res/pg-docstore/tree/main/src/jvmTest/kotlin/com/jillesvangurp/jsondsl/readme/ReadmeGenerationTest.kt). 
+    the source code that generates this README [here](https://github.com/formation-res/json-dsl/tree/main/src/jvmTest/kotlin/com/jillesvangurp/jsondsl/readme/ReadmeGenerationTest.kt). 
 
 ### Hello World
 
