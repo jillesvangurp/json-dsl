@@ -7,7 +7,7 @@ import java.io.File
 import kotlin.math.PI
 import kotlin.reflect.KProperty
 
-const val githubLink = "https://github.com/formation-res/json-dsl"
+const val githubLink = "https://github.com/jillesvangurp/json-dsl"
 
 val sourceGitRepository = SourceRepository(
     repoUrl = githubLink,
