@@ -40,7 +40,15 @@ val readmeMd = sourceGitRepository.md {
     includeMdFile("intro.md")
 
     section("Examples") {
+        +"""
+            All the examples in this README are implemented using
+                my [kotlin4example](https://github.com/jillesvangurp/kotlin4example) library. You can find 
+                the source code that generates this README ${mdLinkToSelf("here")}. 
+        """.trimIndent()
         subSection("Hello World") {
+            +"""
+                Let's start with a simple example.
+            """.trimIndent()
             example {
                 class MyDsl : JsonDsl() {
                     // adds a string property that the user can assign
@@ -59,25 +67,30 @@ val readmeMd = sourceGitRepository.md {
                 println(json)
             }.let {
                 +"""
-                   The json extension function uses the json serializer to produce 
+                   The json extension function uses a json serializer to produce 
                    pretty printed json:
                 """.trimIndent()
 
                 mdCodeBlock(it.stdOut, type = "json")
+
+                +"""
+                    There is also a YAML serializer. More on that below.
+                """.trimIndent()
             }
         }
 
         subSection("Common Kotlin Types") {
             +"""
-                JSON is a fairly simple data format. There are numbers, booleans, strings, lists and dictionaries.
+                JSON is a fairly simple data format. It has numbers, booleans, strings, lists and dictionaries. And null
+                values. 
                 
-                Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.                
+                Kotlin has a bit richer type system and mapping that to JSON is key to providing rich Kotlin DSL.                
                 
-                JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.   
+                JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent. 
                            
-                So it understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
-                And of course other JsonDsl classes, so you can nest them.                
-                And when it falls back to using `toString()`                
+                It understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
+                And of course other JsonDsl classes, so you can nest them.  And it falls back to using 
+                `toString()` for everything else.              
             """.trimIndent()
 
             example {
@@ -113,16 +126,16 @@ val readmeMd = sourceGitRepository.md {
                 }
             }.result.getOrThrow()!!.let {
                 +"""
-                    This does the right things to all the Kotlin types, including `Any`:
+                    This does the right things with all the Kotlin types, including `Any`:
                 """.trimIndent()
                 mdCodeBlock(it.json(true), type = "json")
             }
         }
         subSection("Manipulating the Map directly") {
             +"""
-                All JsonDsl does is provide a delegate implementation of a `MutableMap<String, Any?>`.
+                As mentioned, JsonDsl delegates the storing of properties to a `MutableMap<String, Any?>`. 
                 
-                So all sub classes have direct access to that map. And you can put whatever into it.
+                So, all sub classes have direct access to that map. And you can put anything you want into it.
             """.trimIndent()
             example {
                 class MyDsl : JsonDsl() {
@@ -143,7 +156,8 @@ val readmeMd = sourceGitRepository.md {
                     this["inline_json"] = RawJson("""
                         {
                             "if":"you need to",
-                            "you":"can even add json in string form"
+                            "you":"can even add json in string form",
+                            "RawJson":"is a value class"
                         }
                     """.trimIndent())
                 }
@@ -156,7 +170,7 @@ val readmeMd = sourceGitRepository.md {
                 A lot of JSON dialects use snake cased dictionary keys. Kotlin of course uses 
                 camel case for its identifiers and it has certain things that you can't redefine.
                 
-                Like the `size` property on `Map`.
+                Like the `size` property on `Map`, which is implemented by JsonDsl; or certain keywords.
                 
             """.trimIndent()
 
@@ -164,10 +178,15 @@ val readmeMd = sourceGitRepository.md {
                 class MyDsl : JsonDsl(
                     namingConvention = PropertyNamingConvention.ConvertToSnakeCase
                 ) {
+                    // this will be snake cased
                     var camelCase by property<Boolean>()
                     var mySize by property<Int>(
                         customPropertyName = "size"
                     )
+                    var myVal by property<String>(
+                        customPropertyName = "val"
+                    )
+                    // explicitly set name and provide a default
                     var m by property(
                         customPropertyName = "meaning_of_life",
                         defaultValue = 42
@@ -177,6 +196,7 @@ val readmeMd = sourceGitRepository.md {
                 MyDsl().apply {
                     camelCase = true
                     mySize = Int.MAX_VALUE
+                    myVal = "hello"
                 }
             }.result.getOrThrow()!!.let {
                 mdCodeBlock(it.json(true), type = "json")
@@ -184,8 +204,9 @@ val readmeMd = sourceGitRepository.md {
         }
         subSection("Custom values") {
             +"""
-                Sometimes you need to have the serialized version of a value be different
-                from the kotlin identifier. For this we have added the CustomValue interface.
+                Sometimes you might want to have the serialized version of a value be different
+                from the kotlin identifier that you are using. For this we have added the 
+                CustomValue interface.
                 
                 This is useful in combination with for example Enums.
                                 
@@ -198,7 +219,10 @@ val readmeMd = sourceGitRepository.md {
                 }.json(true))
             }.let {
                 +"""
-                    Note how the grade's value is used instead of the name
+                    Note how the grade's Double value is used instead of the name.
+                    
+                    The withJsonDsl function is a simple extension function that 
+                    creates a JsonDsl for you and applies the block to it.
                 """.trimIndent()
                 mdCodeBlock(it.stdOut,"json")
             }
@@ -225,7 +249,8 @@ val readmeMd = sourceGitRepository.md {
     section("YAML") {
             +"""
                 While initially written to support JSON, I also added a YAML serializer that you may use to 
-                create Kotlin DSLs for YAML based DSLs. 
+                create Kotlin DSLs for YAML based DSLs. So, you could use this to build Kotlin DSLs for things
+                like Github actions, Kubernetes, or other common things that use YAML.
             """.trimIndent()
 
             example {
@@ -268,18 +293,20 @@ val readmeMd = sourceGitRepository.md {
     section("A real life, complex example") {
         +"""
             Here's a bit of the kt-search Kotlin DSL that I lifted
-            from my kt-search library. It defines a minimal 
-            query that only adds one of the (many) types of queries
-            supported by Elasticsearch. Unfortunately, like many real life
+            from my kt-search library. It implements a minimal 
+            query and only supports one of the (many) types of queries
+            supported by Elasticsearch.
+             
+            Like many real life
             JSON, the Elasticsearch DSL is quite complicated and challenging 
-            to model. 
+            to model. This is why I created this library.
             
-            However, JsonDsl provides you all you need to wrap this with 
-            a nice type safe Kotlin DSL.            
+            The code below is a good illustration of several things you can
+            do in Kotlin to make life nice for your DSL users.
         """.trimIndent()
         exampleFromSnippet("com/jillesvangurp/jsondsl/termquery.kt", "kt-search-based-example", allowLongLines = true)
         +"""
-            And this is how you would use it.
+            And this is how your users would use this DSL.
         """.trimIndent()
         example {
             class MyModelClassInES(val myField: String)
@@ -290,15 +317,20 @@ val readmeMd = sourceGitRepository.md {
             println(pretty)
         }.let {
             +"""
+                So, we created a query outer object with a query property.
+                And we assigned a term query instance to that.
+                
                 In JSON form this looks as follows:                
             """.trimIndent()
             mdCodeBlock(it.stdOut,"json")
             +"""
                 Note how it correctly wrapped the term query with an object. And how it correctly 
                 assigns the `TermConfiguration` in an object that has the field value as the key.
-                
                 Also note how we use a property reference here to avoid having to use 
-                a string literal. The Elasticsearch Query DSL support in [kt-search]() is a great 
+                a string literal. 
+                
+                Of course, the Elasticsearch Query DSL support in 
+                [kt-search](https://github.com/jillesvangurp/kt-search) is a great 
                 reference for how to use JsonDsl.
             """.trimIndent()
         }

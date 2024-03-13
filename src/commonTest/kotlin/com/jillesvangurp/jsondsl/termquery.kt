@@ -6,6 +6,8 @@ import com.jillesvangurp.jsondsl.*
 import kotlin.reflect.KProperty
 
 // BEGIN kt-search-based-example
+// using DslMarkers is useful with
+// complicated DSLs
 @DslMarker
 annotation class SearchDSLMarker
 
@@ -15,10 +17,13 @@ interface QueryClauses
 // Elasticsearch Query DSL in kt-search
 class QueryDsl:
     JsonDsl(namingConvention = PropertyNamingConvention.ConvertToSnakeCase),
+    // helper interface that we define
+    // extension functions on
     QueryClauses
 {
-    // Elasticsearch has this object wrapped in
-    // another object
+    // Elasticsearch often wraps objects in
+    // another object. So we use a custom
+    // setter here to hide that.
     var query: ESQuery
         get() {
             val map =
@@ -28,9 +33,13 @@ class QueryDsl:
             return ESQuery(name, details)
         }
         set(value) {
+            // queries extend ESQuery
+            // which takes care of the wrapping
+            // via wrapWithName
             this["query"] = value.wrapWithName()
         }}
 
+// easy way to create a query
 fun query(block: QueryDsl.()->Unit): QueryDsl {
     return QueryDsl().apply(block)
 }
@@ -49,6 +58,8 @@ open class ESQuery(
 }
 
 // the dsl class for creating term queries
+// this is one of the most basic queries
+// in elasticsearch
 @SearchDSLMarker
 class TermQuery(
     field: String,
@@ -56,7 +67,8 @@ class TermQuery(
     termQueryConfig: TermQueryConfig = TermQueryConfig(),
     block: (TermQueryConfig.() -> Unit)? = null
 ) : ESQuery("term") {
-
+    // on init, apply the block to the configuration and
+    // assign it in the queryDetails from the parent
     init {
         queryDetails.put(field, termQueryConfig, PropertyNamingConvention.AsIs)
         termQueryConfig.value = value
@@ -65,6 +77,8 @@ class TermQuery(
 }
 
 // configuration for term queries
+// this is a subset of the supported
+// properties.
 class TermQueryConfig : JsonDsl() {
     var value by property<String>()
     var boost by property<Double>()
@@ -79,6 +93,12 @@ fun QueryClauses.term(
 ) =
     TermQuery(field, value, block = block)
 
+// of course users of this DSL would
+// be storing json documents in elasticsearch
+// and they probably have model classes with
+// properties.
+// so supporting property references
+// for field names is a nice thing
 fun QueryClauses.term(
     field: KProperty<*>,
     value: String,

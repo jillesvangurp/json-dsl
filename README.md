@@ -9,27 +9,26 @@ A DSL (Domain Specific Language) differs from General Purpose Languages, such as
 
 ## The problem
 
-Of course creating model classes for your json domain model and annotating them with annotations for e.g. `kotlinx.serialization` is a valid way to start creating a DSL for your JSON or YAML dialect of choice.
+Of course, creating model classes for your json domain model and annotating them with annotations for e.g. `kotlinx.serialization` is a valid way to start creating a DSL for your JSON or YAML dialect of choice.
 
-However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL. 
+However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL. Or what if your JSON dialect is vast and complicated. Do you have to support all of it? How do you decide what to allow and not allow in your Kotlin DSL.
 
-This library started out as few classes in my [kt-search](https://github.com/jillesvangurp/kt-search) project, which implements an Elasticsearch and Opensearch client. Elasticsearch has several JSON dialects that are used for querying, defining mappings, and a few other things. Especially the query language has a large number of features and is constantly evolving. 
+This library started out as few classes in my [kt-search](https://github.com/jillesvangurp/kt-search) project, which implements an Elasticsearch and Opensearch client. Elasticsearch has several JSON dialects that are used for querying, defining index mappings, settings, and a few other things. Especially the query language has a large number of features and is constantly evolving. 
 
-Not only do I have to worry about implementing each and every little feature these DSLs have and keeping up with upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is of course very challenging. And it was the main reason I created json-dsl: so I don't have to keep up.
+Not only do I have to worry about implementing each and every little feature these DSLs have and keeping up with upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is very challenging. And it was the main reason I created json-dsl: so I don't have to keep up.
 
 ## Strongly typed and Flexible
 
-The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you
-to define classes with properties that delegate storing their value to this map. For anything that your
+The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you to define classes with properties that delegate storing their value to this map. For anything that your
 classes don't implement, the user can always write to the map directly using a simple `put`.
 
-This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
+This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time. You can provide a decent experience for your users with minimal effort. And you users can always work around whatever you did not implement.
 
-With kt-search, I focus on supporting all the commonly used, and some less commonly used things in the Elastic DSLs. But for everything else, I just rely on letting the user modify the underlying map themselves. 
+With kt-search, I simply focus on supporting all the commonly used, and some less commonly used things in the Elastic DSLs. But for everything else, I just rely on letting the user modify the underlying map themselves. A lot of pull requests I get on this project are people adding features they need in the DSLs. So, over time, feature support has gotten more comprehensive.
 
 ## Gradle
 
-This library is published to our own maven repository.
+This library is published to our own maven repository. Simply add the repository like this:
 
 ```kotlin
 repositories {
@@ -53,7 +52,13 @@ And then you can add the dependency:
 
 ## Examples
 
+All the examples in this README are implemented using
+    my [kotlin4example](https://github.com/jillesvangurp/kotlin4example) library. You can find 
+    the source code that generates this README [here](https://github.com/formation-res/pg-docstore/tree/main/src/jvmTest/kotlin/com/jillesvangurp/jsondsl/readme/ReadmeGenerationTest.kt). 
+
 ### Hello World
+
+Let's start with a simple example.
 
 ```kotlin
 class MyDsl : JsonDsl() {
@@ -73,7 +78,7 @@ val json = myDsl {
 println(json)
 ```
 
-The json extension function uses the json serializer to produce 
+The json extension function uses a json serializer to produce 
 pretty printed json:
 
 ```json
@@ -82,17 +87,20 @@ pretty printed json:
 }
 ```
 
+There is also a YAML serializer. More on that below.
+
 ### Common Kotlin Types
 
-JSON is a fairly simple data format. There are numbers, booleans, strings, lists and dictionaries.
+JSON is a fairly simple data format. It has numbers, booleans, strings, lists and dictionaries. And null
+values. 
 
-Kotlin is of course a bit richer and mapping that to JSON is key to providing rich Kotlin DSL.                
+Kotlin has a bit richer type system and mapping that to JSON is key to providing rich Kotlin DSL.                
 
-JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent.   
+JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent. 
            
-So it understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
-And of course other JsonDsl classes, so you can nest them.                
-And when it falls back to using `toString()`                
+It understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
+And of course other JsonDsl classes, so you can nest them.  And it falls back to using 
+`toString()` for everything else.              
 
 ```kotlin
 class MyDsl : JsonDsl() {
@@ -127,7 +135,7 @@ MyDsl().apply {
 }
 ```
 
-This does the right things to all the Kotlin types, including `Any`:
+This does the right things with all the Kotlin types, including `Any`:
 
 ```json
 {
@@ -166,9 +174,9 @@ This does the right things to all the Kotlin types, including `Any`:
 
 ### Manipulating the Map directly
 
-All JsonDsl does is provide a delegate implementation of a `MutableMap<String, Any?>`.
+As mentioned, JsonDsl delegates the storing of properties to a `MutableMap<String, Any?>`. 
 
-So all sub classes have direct access to that map. And you can put whatever into it.
+So, all sub classes have direct access to that map. And you can put anything you want into it.
 
 ```kotlin
 class MyDsl : JsonDsl() {
@@ -189,7 +197,8 @@ MyDsl().apply {
   this["inline_json"] = RawJson("""
     {
       "if":"you need to",
-      "you":"can even add json in string form"
+      "you":"can even add json in string form",
+      "RawJson":"is a value class"
     }
   """.trimIndent())
 }
@@ -207,7 +216,8 @@ MyDsl().apply {
   ],
   "inline_json": {
     "if":"you need to",
-    "you":"can even add json in string form"
+    "you":"can even add json in string form",
+    "RawJson":"is a value class"
 }
 }
 ```
@@ -217,16 +227,21 @@ MyDsl().apply {
 A lot of JSON dialects use snake cased dictionary keys. Kotlin of course uses 
 camel case for its identifiers and it has certain things that you can't redefine.
 
-Like the `size` property on `Map`.
+Like the `size` property on `Map`, which is implemented by JsonDsl; or certain keywords.
 
 ```kotlin
 class MyDsl : JsonDsl(
   namingConvention = PropertyNamingConvention.ConvertToSnakeCase
 ) {
+  // this will be snake cased
   var camelCase by property<Boolean>()
   var mySize by property<Int>(
     customPropertyName = "size"
   )
+  var myVal by property<String>(
+    customPropertyName = "val"
+  )
+  // explicitly set name and provide a default
   var m by property(
     customPropertyName = "meaning_of_life",
     defaultValue = 42
@@ -236,6 +251,7 @@ class MyDsl : JsonDsl(
 MyDsl().apply {
   camelCase = true
   mySize = Int.MAX_VALUE
+  myVal = "hello"
 }
 ```
 
@@ -243,14 +259,16 @@ MyDsl().apply {
 {
   "meaning_of_life": 42,
   "camel_case": true,
-  "size": 2147483647
+  "size": 2147483647,
+  "val": "hello"
 }
 ```
 
 ### Custom values
 
-Sometimes you need to have the serialized version of a value be different
-from the kotlin identifier. For this we have added the CustomValue interface.
+Sometimes you might want to have the serialized version of a value be different
+from the kotlin identifier that you are using. For this we have added the 
+CustomValue interface.
 
 This is useful in combination with for example Enums.
 
@@ -269,7 +287,10 @@ println(withJsonDsl {
 }.json(true))
 ```
 
-Note how the grade's value is used instead of the name
+Note how the grade's Double value is used instead of the name.
+
+The withJsonDsl function is a simple extension function that 
+creates a JsonDsl for you and applies the block to it.
 
 ```json
 {
@@ -299,7 +320,8 @@ This also works for things like enums, value classes, and other Kotlin language 
 ## YAML
 
 While initially written to support JSON, I also added a YAML serializer that you may use to 
-create Kotlin DSLs for YAML based DSLs. 
+create Kotlin DSLs for YAML based DSLs. So, you could use this to build Kotlin DSLs for things
+like Github actions, Kubernetes, or other common things that use YAML.
 
 ```kotlin
 class YamlDSL : JsonDsl() {
@@ -350,16 +372,20 @@ and other formats. I welcome pull requests for this provided they don't add any 
 ## A real life, complex example
 
 Here's a bit of the kt-search Kotlin DSL that I lifted
-from my kt-search library. It defines a minimal 
-query that only adds one of the (many) types of queries
-supported by Elasticsearch. Unfortunately, like many real life
+from my kt-search library. It implements a minimal 
+query and only supports one of the (many) types of queries
+supported by Elasticsearch.
+ 
+Like many real life
 JSON, the Elasticsearch DSL is quite complicated and challenging 
-to model. 
+to model. This is why I created this library.
 
-However, JsonDsl provides you all you need to wrap this with 
-a nice type safe Kotlin DSL.            
+The code below is a good illustration of several things you can
+do in Kotlin to make life nice for your DSL users.
 
 ```kotlin
+// using DslMarkers is useful with
+// complicated DSLs
 @DslMarker
 annotation class SearchDSLMarker
 
@@ -369,10 +395,13 @@ interface QueryClauses
 // Elasticsearch Query DSL in kt-search
 class QueryDsl:
   JsonDsl(namingConvention = PropertyNamingConvention.ConvertToSnakeCase),
+  // helper interface that we define
+  // extension functions on
   QueryClauses
 {
-  // Elasticsearch has this object wrapped in
-  // another object
+  // Elasticsearch often wraps objects in
+  // another object. So we use a custom
+  // setter here to hide that.
   var query: ESQuery
     get() {
       val map =
@@ -382,9 +411,13 @@ class QueryDsl:
       return ESQuery(name, details)
     }
     set(value) {
+      // queries extend ESQuery
+      // which takes care of the wrapping
+      // via wrapWithName
       this["query"] = value.wrapWithName()
     }}
 
+// easy way to create a query
 fun query(block: QueryDsl.()->Unit): QueryDsl {
   return QueryDsl().apply(block)
 }
@@ -403,6 +436,8 @@ open class ESQuery(
 }
 
 // the dsl class for creating term queries
+// this is one of the most basic queries
+// in elasticsearch
 @SearchDSLMarker
 class TermQuery(
   field: String,
@@ -410,7 +445,8 @@ class TermQuery(
   termQueryConfig: TermQueryConfig = TermQueryConfig(),
   block: (TermQueryConfig.() -> Unit)? = null
 ) : ESQuery("term") {
-
+  // on init, apply the block to the configuration and
+  // assign it in the queryDetails from the parent
   init {
     queryDetails.put(field, termQueryConfig, PropertyNamingConvention.AsIs)
     termQueryConfig.value = value
@@ -419,6 +455,8 @@ class TermQuery(
 }
 
 // configuration for term queries
+// this is a subset of the supported
+// properties.
 class TermQueryConfig : JsonDsl() {
   var value by property<String>()
   var boost by property<Double>()
@@ -433,6 +471,12 @@ fun QueryClauses.term(
 ) =
   TermQuery(field, value, block = block)
 
+// of course users of this DSL would
+// be storing json documents in elasticsearch
+// and they probably have model classes with
+// properties.
+// so supporting property references
+// for field names is a nice thing
 fun QueryClauses.term(
   field: KProperty<*>,
   value: String,
@@ -441,7 +485,7 @@ fun QueryClauses.term(
   TermQuery(field.name, value, block = block)
 ```
 
-And this is how you would use it.
+And this is how your users would use this DSL.
 
 ```kotlin
 class MyModelClassInES(val myField: String)
@@ -451,6 +495,9 @@ val q = query {
 val pretty = q.json(pretty = true)
 println(pretty)
 ```
+
+So, we created a query outer object with a query property.
+And we assigned a term query instance to that.
 
 In JSON form this looks as follows:                
 
@@ -468,25 +515,26 @@ In JSON form this looks as follows:
 
 Note how it correctly wrapped the term query with an object. And how it correctly 
 assigns the `TermConfiguration` in an object that has the field value as the key.
-
 Also note how we use a property reference here to avoid having to use 
-a string literal. The Elasticsearch Query DSL support in [kt-search]() is a great 
+a string literal. 
+
+Of course, the Elasticsearch Query DSL support in 
+[kt-search](https://github.com/jillesvangurp/kt-search) is a great 
 reference for how to use JsonDsl.
 
 ## Multi platform
 
 This is a Kotlin multi platform library that should work on most  kotlin platforms (jvm, js, ios, android, etc). Wasm will be added later, after Kotlin 2.0 stabilizes.
 
-My intention is to keep this code very portable and not introduce any dependencies other than
-the Kotlin standard library.
+My intention is to keep this code very portable and not introduce any dependencies other than the Kotlin standard library.
 
 ## Development and stability
 
-Before I extracted it from there, this library was part of [kt-search](https://github.com/jillesvangurp/kt-search), which has been out there for several years and  has a steadily growing user base. 
+Before I extracted it from there, this library was part of [kt-search](https://github.com/jillesvangurp/kt-search), which has been out there for several years and  has a steadily growing user base. So, even though this library is relatively new, the code base has been stable and actively used for several years.
 
 Other than cleaning the code a bit up for public use, there were no compatibility breaking changes. This means I want to keep the API for json-dsl stable and will not make any major changes unless there is a really good reason. 
 
-This also means there won't be a lot of commits or updates since things are stable and pretty much working as intended. Unless somebody finds a bug or asks for reasonable changes, the only changes likely to happen will be occasional dependency updates.
+This also means there won't be a lot of commits or updates since things are stable and pretty much working as intended. And because I have a few users of kt-search, I also don't want to burden them with compatibility breaking changes. Unless somebody finds a bug or asks for reasonable changes, the only changes likely to happen will be occasional dependency updates.
 
 ## Libraries using Json Dsl
 

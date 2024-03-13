@@ -7,27 +7,26 @@ A DSL (Domain Specific Language) differs from General Purpose Languages, such as
 
 ## The problem
 
-Of course creating model classes for your json domain model and annotating them with annotations for e.g. `kotlinx.serialization` is a valid way to start creating a DSL for your JSON or YAML dialect of choice.
+Of course, creating model classes for your json domain model and annotating them with annotations for e.g. `kotlinx.serialization` is a valid way to start creating a DSL for your JSON or YAML dialect of choice.
 
-However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL. 
+However, this has some limitations. What if your JSON dialect evolves and somebody adds some new features? Unless you change your model class, it would not be possible to access such new features via the Kotlin DSL. Or what if your JSON dialect is vast and complicated. Do you have to support all of it? How do you decide what to allow and not allow in your Kotlin DSL.
 
-This library started out as few classes in my [kt-search](https://github.com/jillesvangurp/kt-search) project, which implements an Elasticsearch and Opensearch client. Elasticsearch has several JSON dialects that are used for querying, defining mappings, and a few other things. Especially the query language has a large number of features and is constantly evolving. 
+This library started out as few classes in my [kt-search](https://github.com/jillesvangurp/kt-search) project, which implements an Elasticsearch and Opensearch client. Elasticsearch has several JSON dialects that are used for querying, defining index mappings, settings, and a few other things. Especially the query language has a large number of features and is constantly evolving. 
 
-Not only do I have to worry about implementing each and every little feature these DSLs have and keeping up with upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is of course very challenging. And it was the main reason I created json-dsl: so I don't have to keep up.
+Not only do I have to worry about implementing each and every little feature these DSLs have and keeping up with upstream additions to OpenSearch and Elasticsearch. I also have to worry about supporting query and mapping features added via custom plugins. This is very challenging. And it was the main reason I created json-dsl: so I don't have to keep up.
 
 ## Strongly typed and Flexible
 
-The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you
-to define classes with properties that delegate storing their value to this map. For anything that your
+The key feature in json-dsl is that it uses a `MutableMap` for storing property values. This enables you to define classes with properties that delegate storing their value to this map. For anything that your
 classes don't implement, the user can always write to the map directly using a simple `put`.
 
-This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time.
+This gives users a nice fallback for things your DSL classes don't implement and it relieves Kotlin DSL implementors from having to provide support for every new feature the upstream JSON dialect has or adds over time. You can provide a decent experience for your users with minimal effort. And you users can always work around whatever you did not implement.
 
-With kt-search, I focus on supporting all the commonly used, and some less commonly used things in the Elastic DSLs. But for everything else, I just rely on letting the user modify the underlying map themselves. 
+With kt-search, I simply focus on supporting all the commonly used, and some less commonly used things in the Elastic DSLs. But for everything else, I just rely on letting the user modify the underlying map themselves. A lot of pull requests I get on this project are people adding features they need in the DSLs. So, over time, feature support has gotten more comprehensive.
 
 ## Gradle
 
-This library is published to our own maven repository.
+This library is published to our own maven repository. Simply add the repository like this:
 
 ```kotlin
 repositories {
