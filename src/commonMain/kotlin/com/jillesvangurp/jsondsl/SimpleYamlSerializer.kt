@@ -101,7 +101,7 @@ fun String.yamlEscape(): String {
             this.trim() != this ||
             this.toIntOrNull() != null ||
             this.toDoubleOrNull() != null ||
-            booleanStrings.contains(this.toLowerCase()) ||
+            booleanStrings.contains(this.lowercase()) ||
             this.isEmpty()
 
     return if (needsQuotes) {
