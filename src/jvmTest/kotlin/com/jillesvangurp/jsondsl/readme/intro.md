@@ -47,3 +47,5 @@ And then you can add the dependency:
     implementation("com.jillesvangurp:json-dsl:3.x.y")
 ```
 
+If you were using json-dsl via kt-search before, you can update simply by bumping the version of json-dsl to 3.0. 2.x got released along with kt-search and has now been removed.
+
