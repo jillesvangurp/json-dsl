@@ -35,7 +35,6 @@ repositories {
         // optional but it speeds up the gradle dependency resolution
         content {
             includeGroup("com.jillesvangurp")
-            includeGroup("com.tryformation")
         }
     }
 }
@@ -45,5 +44,6 @@ And then you can add the dependency:
 
 ```kotlin
     // check the latest release tag for the latest version
-    implementation("com.jillesvangurp:json-dsl:1.x.y")
+    implementation("com.jillesvangurp:json-dsl:3.x.y")
 ```
+
