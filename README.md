@@ -235,14 +235,14 @@ class MyDsl : JsonDsl(
 ) {
   // this will be snake cased
   var camelCase by property<Boolean>()
-  var mySize by property<Int>(
+  var mySize by customProperty<Int>(
     customPropertyName = "size"
   )
-  var myVal by property<String>(
+  var myVal by customProperty<String>(
     customPropertyName = "val"
   )
   // explicitly set name and provide a default
-  var m by property(
+  var m by customProperty(
     customPropertyName = "meaning_of_life",
     defaultValue = 42
   )
