@@ -9,7 +9,7 @@ class MyDsl:JsonDsl() {
     // will be snake_cased in the json
     var meaningOfLife by property<Int>()
     // we override the property name here
-    var l by customProperty<List<Any>>("a_custom_list")
+    var l by property<List<Any>>("a_custom_list")
     var m by property<Map<Any,Any>>()
 }
 
