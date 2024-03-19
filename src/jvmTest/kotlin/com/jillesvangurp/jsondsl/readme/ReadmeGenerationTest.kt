@@ -44,6 +44,9 @@ val readmeMd = sourceGitRepository.md {
             All the examples in this README are implemented using
                 my [kotlin4example](https://github.com/jillesvangurp/kotlin4example) library. You can find 
                 the source code that generates this README ${mdLinkToSelf("here")}. 
+                
+            A more expanded version of these examples can be found in the form of a 
+            Jupyter notebook [here](https://github.com/jillesvangurp/json-dsl-jupyter)
         """.trimIndent()
         subSection("Hello World") {
             +"""
