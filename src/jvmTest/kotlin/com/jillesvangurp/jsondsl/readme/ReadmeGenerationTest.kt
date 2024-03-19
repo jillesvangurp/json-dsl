@@ -205,10 +205,10 @@ val readmeMd = sourceGitRepository.md {
         subSection("Custom values") {
             +"""
                 Sometimes you might want to have the serialized version of a value be different
-                from the kotlin identifier that you are using. For this we have added the 
+                from the kotlin type that you are using. For this we have added the 
                 CustomValue interface.
                 
-                This is useful in combination with for example Enums.
+                A simple use case for this could be Enums:
                                 
             """.trimIndent()
 
@@ -225,6 +225,40 @@ val readmeMd = sourceGitRepository.md {
                     creates a JsonDsl for you and applies the block to it.
                 """.trimIndent()
                 mdCodeBlock(it.stdOut,"json")
+            }
+
+            +"""
+                You can also construct more complex ways to serialize your classes.
+            """.trimIndent()
+
+            example {
+                data class Person(
+                    val firstName: String,
+                    val lastName: String): CustomValue<List<String>> {
+                    override val value =
+                        listOf(firstName, lastName)
+                }
+
+                withJsonDsl {
+                    this["person"] = Person("Jane", "Doe")
+                }.json(true)
+            }
+
+            +"""
+                And of course your custom value can be a JsonDsl too.
+            """.trimIndent()
+            example {
+                data class Person(
+                    val firstName: String,
+                    val lastName: String): CustomValue<JsonDsl> {
+                    override val value = withJsonDsl {
+                        this["person"] = withJsonDsl {
+                            this["fn"] = firstName
+                            this["ln"] = lastName
+                            this["full_name"] = "$firstName $lastName"
+                        }
+                    }
+                }
             }
 
             +"""
