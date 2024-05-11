@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -37,9 +40,9 @@ kotlin {
     macosArm64()
     iosArm64()
     iosX64()
+    wasmJs()
     // blocked on kotest assertions wasm release
-//    @OptIn(ExperimentalWasmDsl::class)
-//    wasmJs()
+//    wasmWasi()
 
     sourceSets {
 
