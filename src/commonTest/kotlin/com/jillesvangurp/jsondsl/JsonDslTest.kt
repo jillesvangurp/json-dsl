@@ -1,6 +1,7 @@
 package com.jillesvangurp.jsondsl
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlin.test.Test
 
@@ -91,5 +92,21 @@ class JsonDslTest {
             query = term("foo","bar")
         }
         println(q.json(true))
+    }
+
+    @Test
+    fun shouldRespectSnakeCasing() {
+        class FooDsl: JsonDsl(namingConvention = PropertyNamingConvention.ConvertToSnakeCase) {
+            var myFoo by property<String>(customPropertyName = "bar")
+            var bar by property<String>(customPropertyName = "foobar", defaultValue = "xxx")
+        }
+        FooDsl().apply {
+            myFoo = "foobar"
+        }.json(pretty = true).let {json ->
+            println(json)
+            json.shouldContain("""
+                "bar": "foobar"
+            """.trimIndent())
+        }
     }
 }
