@@ -40,6 +40,7 @@ kotlin {
     macosArm64()
     iosArm64()
     iosX64()
+    iosSimulatorArm64()
     wasmJs()
     // blocked on kotest assertions wasm release
 //    wasmWasi()
