@@ -42,7 +42,11 @@ kotlin {
     iosSimulatorArm64()
     iosX64()
     iosSimulatorArm64()
-    wasmJs()
+    wasmJs {
+        browser()
+        nodejs()
+        d8()
+    }
     // blocked on kotest assertions wasm release
 //    wasmWasi()
 
@@ -87,7 +91,17 @@ kotlin {
             }
         }
 
+        wasmJsTest {
+            dependencies {
+                implementation(kotlin("test-wasm-js"))
+            }
+        }
+
         all {
+            languageSettings {
+                languageVersion = "1.9"
+                apiVersion = "1.9"
+            }
             languageSettings.optIn("kotlin.RequiresOptIn")
         }
     }
@@ -97,16 +111,6 @@ tasks.named("iosSimulatorArm64Test") {
     // requires IOS simulator and tens of GB of other stuff to be installed
     // so keep it disabled
     enabled = false
-}
-
-tasks.withType<KotlinJvmCompile> {
-    jvmTargetValidationMode.set(JvmTargetValidationMode.WARNING)
-
-    kotlinOptions {
-        // this is the minimum LTS version we support, 8 is no longer supported
-        jvmTarget = "11"
-        languageVersion = "1.9"
-    }
 }
 
 publishing {
