@@ -39,6 +39,7 @@ kotlin {
     macosX64()
     macosArm64()
     iosArm64()
+    iosSimulatorArm64()
     iosX64()
     iosSimulatorArm64()
     wasmJs()
@@ -90,6 +91,12 @@ kotlin {
             languageSettings.optIn("kotlin.RequiresOptIn")
         }
     }
+}
+
+tasks.named("iosSimulatorArm64Test") {
+    // requires IOS simulator and tens of GB of other stuff to be installed
+    // so keep it disabled
+    enabled = false
 }
 
 tasks.withType<KotlinJvmCompile> {
