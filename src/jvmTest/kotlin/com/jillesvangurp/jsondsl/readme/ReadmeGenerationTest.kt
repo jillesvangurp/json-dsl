@@ -85,13 +85,11 @@ val readmeMd = sourceGitRepository.md {
         subSection("Common Kotlin Types") {
             +"""
                 JSON is a fairly simple data format. It has numbers, booleans, strings, lists and dictionaries. And null
-                values. 
-                
-                Kotlin has a bit richer type system and mapping that to JSON is key to providing rich Kotlin DSL.                
+                values.  Kotlin has a bit richer type system and mapping that to JSON is key to providing rich Kotlin DSL.                
                 
                 JsonDsl does a best effort to do map Kotlin types correctly to the intended JSON equivalent. 
                            
-                It understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences.                
+                It understands all the primitives, Maps and Lists. But also Arrays, Sets, Sequences, etc.                
                 And of course other JsonDsl classes, so you can nest them.  And it falls back to using 
                 `toString()` for everything else.              
             """.trimIndent()
@@ -122,14 +120,14 @@ val readmeMd = sourceGitRepository.md {
                     idontknow = mapOf(
                         "arrays" to arrayOf(
                             1, 2, "3", 4.0,
-                            mapOf("this" to "is valid JSON")
+                            mapOf("this" to "is valid JSON"), "mixing types is allowed in JSON"
                         ),
                         "sequences" to sequenceOf(1,"2",3.0)
                     )
                 }
             }.result.getOrThrow()!!.let {
                 +"""
-                    This does the right things with all the Kotlin types, including `Any`:
+                    This does the right things with all the used Kotlin types, including `Any`:
                 """.trimIndent()
                 mdCodeBlock(it.json(true), type = "json")
             }
@@ -149,18 +147,21 @@ val readmeMd = sourceGitRepository.md {
                     // nicely typed.
                     foo = "bar"
 
+                    // but we never defined a bar property
                     this["bar"] = "foo"
-                    this["going_off_script"] = listOf(
+                    // or this ...
+                    this["whatever"] = listOf(
                         MyDsl().apply {
-                            this["anything"] = "is possible"
+                            this["you"] = "can add anything you want"
                         },
                         42
                     )
+
+                    // RawJson is a Kotlin value class
                     this["inline_json"] = RawJson("""
                         {
                             "if":"you need to",
-                            "you":"can even add json in string form",
-                            "RawJson":"is a value class"
+                            "you":"can even add json in string form",                           
                         }
                     """.trimIndent())
                 }
@@ -170,26 +171,28 @@ val readmeMd = sourceGitRepository.md {
         }
         subSection("snake_casing, custom names, defaults") {
             +"""
-                A lot of JSON dialects use snake cased dictionary keys. Kotlin of course uses 
+                A lot of JSON dialects use snake cased field names. Kotlin of course uses 
                 camel case for its identifiers and it has certain things that you can't redefine.
-                
                 Like the `size` property on `Map`, which is implemented by JsonDsl; or certain keywords.
                 
             """.trimIndent()
 
             example {
                 class MyDsl : JsonDsl(
+                    // this will snake case all the names
                     namingConvention = PropertyNamingConvention.ConvertToSnakeCase
                 ) {
-                    // this will be snake cased
+                    // -> camel_case
                     var camelCase by property<Boolean>()
+                    // unfortunately Map defines a size val already
                     var mySize by property<Int>(
                         customPropertyName = "size"
                     )
+                    // val is a keyword in Kotlin
                     var myVal by property<String>(
                         customPropertyName = "val"
                     )
-                    // explicitly set name and provide a default
+                    // Kotlin has default values, JSON does not.
                     var m by property(
                         customPropertyName = "meaning_of_life",
                         defaultValue = 42
@@ -207,12 +210,11 @@ val readmeMd = sourceGitRepository.md {
         }
         subSection("Custom values") {
             +"""
-                Sometimes you might want to have the serialized version of a value be different
+                Sometimes you want to have the serialized version of a value be different
                 from the kotlin type that you are using. For this we have added the 
                 CustomValue interface.
                 
-                A simple use case for this could be Enums:
-                                
+                A simple use case for this could be Enums:                                
             """.trimIndent()
 
             exampleFromSnippet(ReadmeGenerationTest::class,"grades-enum")
