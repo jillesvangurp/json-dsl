@@ -573,6 +573,18 @@ This is a Kotlin multi platform library that should work on most  kotlin platfor
 
 My intention is to keep this code very portable and lightweight and not introduce any dependencies other than the Kotlin standard library. 
 
+## Using JsonDsl with Javascript libraries
+
+If you use kotlin-js, there are a lot of Javascript libraries out there that have functions that expect some sort of Javascript objects as a parameter. Integrating such libraries into Kotlin typically requires writing some type mappings to be able to call functions in these libraries and defining external class definitions for any models.
+
+With JsonDsl you can skip a lot of these class definitions and simply create a Kotlin DSL instead. Or use simply use it in schemaless mode and rely on the convenient mappings included for the default Kotlin collection classes. You can use lists, enums, maps, etc. and it will do the right thing. You have the full flexibility of JsonDsl to make things as type safe as you need them to be.
+
+There is a `toJsObject()` extension function that is available in kotlin-js that you can use to convert any JsonDsl instance to a javascript object.
+
+## Parsing
+
+This library is not intended as a substitute for kotlinx.serialization or other JSON parsing frameworks. It is instead intended for writing Kotlin DSLs that you can use to generate valid JSON or YAML. JsonDsl does not support any form of parsing.
+
 ## Development and stability
 
 Before I extracted it from there, this library was part of [kt-search](https://github.com/jillesvangurp/kt-search), which has been out there for several years and  has a steadily growing user base. So, even though this library is relatively new, the code base has been stable and actively used for several years.

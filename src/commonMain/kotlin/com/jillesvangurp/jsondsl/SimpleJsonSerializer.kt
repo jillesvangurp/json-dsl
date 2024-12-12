@@ -3,6 +3,9 @@ package com.jillesvangurp.jsondsl
 /**
  * To keep this framework light weight, I decided to implement my own json serializer.
  * It's not that hard and it means that people can use whatever json framework they want.
+ *
+ * This is a one way street. This library does not support parsing and JsonDsl model classes are not
+ * a substitute for a model classes in e.g. kotlinx.serialization.
  */
 class SimpleJsonSerializer : JsonDslSerializer {
     override fun serialize(properties: JsonDsl, pretty: Boolean): String {
