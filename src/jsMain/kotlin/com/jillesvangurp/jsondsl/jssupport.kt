@@ -14,9 +14,10 @@ fun JsonDsl.toJsObject(): dynamic {
     fun convert(obj: Any?): dynamic {
         return when (obj) {
             null -> null
-            is RawJson -> JSON.parse(obj.value) // Safely parse RawJson as JSON
-            is Number, is Boolean, is String -> obj
-            is Char -> obj.toString() // Serialize Char as String
+            is RawJson -> JSON.parse(obj.value)
+            is Number -> obj.toDouble() // some number types come out looking a bit funny otherwise
+            is Boolean, is String -> obj
+            is Char -> obj.toString()
             is Map<*, *> -> {
                 val jsObj = js("{}")
                 obj.forEach { (key, value) ->
